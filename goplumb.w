@@ -147,8 +147,8 @@ func compare(m1 *Message, m2 *Message) bool {
 		len(m1.Attr)!=len(m2.Attr) @t\2@>{
 		return false
 	}
-	for i:=0;i<len(m1.Attr);i++ {
-		if m1.Attr[i]!=m2.Attr[i] {
+	for n,v:=range m1.Attr {
+		if m2.Attr[n]!=v {
 			return false
 		}
 	}	
@@ -167,18 +167,15 @@ Message struct {
 	Dst		string
 	Wdir	string
 	Type	string
-    Attr	[]Attr
+    Attr	Attrs
 	Data	[]byte
 }
 
-@ The |Attr| structure describes an \.{plumb} attribute like a pair ``name=value''
-
+@
 @<Types@>=
-//|Attr| is a description of an attribute of a plumber message.
-Attr struct {
-	Name	string
-	Value 	string
-}
+//|Attrs| is a map of an attribute of a plumber message.
+Attrs map[string]string
+
 
 @ A |Plumb| is a top-level structure. It contains a pointer to |os.File|, which is a port in \.{plumber}'s file system.
 All fields of the |Plumb| are unexported.
@@ -269,16 +266,18 @@ func Pack(message* Message) []byte {
 @c
 //|PackAttr| packs |attr| to |string|. If an attribute value contains a white space,
 //a quote or an equal sign the value will be quoted.
-func PackAttr(attr []Attr) string {
+func PackAttr(attr Attrs) string {
 	var s string
-	for i,v:=range attr {
-		if i!=0 {
+	first:=true
+	for n,v:=range attr {
+		if !first {
 			s+=" "
 		}
-		if strings.ContainsAny(v.Value, " '=\t") {
-			s+=fmt.Sprintf("%s='%s'", v.Name, strings.Replace(v.Value, "'", "''", -1))
+		first=false
+		if strings.ContainsAny(v, " '=\t") {
+			s+=fmt.Sprintf("%s='%s'", n, strings.Replace(v, "'", "''", -1))
 		} else {
-			s+=fmt.Sprintf("%s=%s", v.Name, v.Value)
+			s+=fmt.Sprintf("%s=%s", n, v)
 		}
 	}
 	return s
@@ -364,10 +363,10 @@ func Test2(t *testing.T){
 	m.Dst="goplumb"
 	m.Wdir="."
 	m.Type="text"
-	m.Attr=append([]Attr{}, @t\1@>@/
-					Attr{Name:"attr1",Value:"value1"}, @/
-					Attr{Name:"attr2",Value:"value2"}, @/
-					Attr{Name:"attr3",Value:"value = '3\t"})@t\2@>
+	m.Attr=make(Attrs)
+	m.Attr["attr1"]="value1"
+	m.Attr["attr2"]="value2"
+	m.Attr["attr3"]="value = '3\t"
 	m.Data=[]byte("1234567890")
 	if err:=sp.Send(&m); err!=nil {
 		t.Fatal(err)
@@ -455,10 +454,10 @@ func Test3(t *testing.T){
 	m.Dst="goplumb"
 	m.Wdir="."
 	m.Type="text"
-	m.Attr=append([]Attr{}, @t\1@>@/
-					Attr{Name:"attr1",Value:"value1"}, @/
-					Attr{Name:"attr2",Value:"value2"}, @/
-					Attr{Name:"attr3",Value:"value = '3\t"})@t\2@>
+	m.Attr=make(Attrs)
+	m.Attr["attr1"]="value1"
+	m.Attr["attr2"]="value2"
+	m.Attr["attr3"]="value = '3\t"
 	m.Data=make([]byte, 0, 9000)
 	for i:=0; i<900; i++ {
 		m.Data=append(m.Data,[]byte("1234567890")...)
@@ -478,12 +477,12 @@ func Test3(t *testing.T){
 @* UnpackAttr. |UnpackAttr| unpacks attributes from |s|, unquotes values if it is neccessary.
 @c
 //|UnpackAttr| unpack the attributes from |s|
-func UnpackAttr(s string) []Attr {
-	var attrs []Attr
+func UnpackAttr(s string) Attrs {
+	attrs:=make(Attrs)
 	for i:=0; i<len(s); {
-		var a Attr
+		var n, v string
 		for ; i<len(s) && s[i]!='='; i++ {
-			a.Name+=s[i:i+1]
+			n+=s[i:i+1]
 		}
 		i++
 		if i==len(s) { 
@@ -501,17 +500,17 @@ func UnpackAttr(s string) []Attr {
 					}
 					i++
 				}
-				a.Value+=s[i:i+1]
+				v+=s[i:i+1]
 			}
 			i++	
 		} else {
 			for ; i<len(s) && s[i]!=' '; i++ {
-				a.Value+=s[i:i+1]
+				v+=s[i:i+1]
 			}
 			
 		}
 		i++	
-		attrs=append(attrs, a)
+		attrs[n]=v
 	}
 	return attrs
 }

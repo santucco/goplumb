@@ -41,7 +41,7 @@ import(
 /*6:*/
 
 
-//line goplumb.w:186
+//line goplumb.w:183
 
 "os"
 
@@ -54,7 +54,7 @@ import(
 /*9:*/
 
 
-//line goplumb.w:200
+//line goplumb.w:197
 
 "strings"
 
@@ -67,7 +67,7 @@ import(
 /*13:*/
 
 
-//line goplumb.w:251
+//line goplumb.w:248
 
 "fmt"
 
@@ -80,7 +80,7 @@ import(
 /*17:*/
 
 
-//line goplumb.w:304
+//line goplumb.w:303
 
 "errors"
 "io"
@@ -94,7 +94,7 @@ import(
 /*22:*/
 
 
-//line goplumb.w:394
+//line goplumb.w:393
 
 "bytes"
 "strconv"
@@ -122,7 +122,7 @@ Src string
 Dst string
 Wdir string
 Type string
-Attr[]Attr
+Attr Attrs
 Data[]byte
 }
 
@@ -135,13 +135,11 @@ Data[]byte
 /*5:*/
 
 
-//line goplumb.w:176
+//line goplumb.w:175
 
-//Attr is a description of an attribute of a plumber message.
-Attr struct{
-Name string
-Value string
-}
+//Attrs is a map of an attribute of a plumber message.
+Attrs map[string]string
+
 
 
 
@@ -152,7 +150,7 @@ Value string
 /*7:*/
 
 
-//line goplumb.w:189
+//line goplumb.w:186
 
 Plumb struct{
 f*os.File
@@ -173,7 +171,7 @@ var(
 /*8:*/
 
 
-//line goplumb.w:194
+//line goplumb.w:191
 
 //PlumberDir is a default mount point of plumber.
 PlumberDir string= "/mnt/plumb/"
@@ -196,7 +194,7 @@ PlumberDir string= "/mnt/plumb/"
 /*10:*/
 
 
-//line goplumb.w:204
+//line goplumb.w:201
 
 //Open opens a specified port with a specified omode.
 //If the port begin with a slash, it is taken as a literal file name,
@@ -225,7 +223,7 @@ return&p,nil
 /*12:*/
 
 
-//line goplumb.w:238
+//line goplumb.w:235
 
 //Send sends a message.
 func(this*Plumb)Send(message*Message)error{
@@ -246,7 +244,7 @@ return err
 /*14:*/
 
 
-//line goplumb.w:255
+//line goplumb.w:252
 
 //Pack packs a message to []byte.
 func Pack(message*Message)[]byte{
@@ -268,20 +266,22 @@ return append(b,message.Data...)
 /*15:*/
 
 
-//line goplumb.w:269
+//line goplumb.w:266
 
 //PackAttr packs attr to string. If an attribute value contains a white space,
 //a quote or an equal sign the value will be quoted.
-func PackAttr(attr[]Attr)string{
+func PackAttr(attr Attrs)string{
 var s string
-for i,v:=range attr{
-if i!=0{
+first:=true
+for n,v:=range attr{
+if!first{
 s+= " "
 }
-if strings.ContainsAny(v.Value," '=\t"){
-s+= fmt.Sprintf("%s='%s'",v.Name,strings.Replace(v.Value,"'","''",-1))
+first= false
+if strings.ContainsAny(v," '=\t"){
+s+= fmt.Sprintf("%s='%s'",n,strings.Replace(v,"'","''",-1))
 }else{
-s+= fmt.Sprintf("%s=%s",v.Name,v.Value)
+s+= fmt.Sprintf("%s=%s",n,v)
 }
 }
 return s
@@ -296,7 +296,7 @@ return s
 /*16:*/
 
 
-//line goplumb.w:288
+//line goplumb.w:287
 
 //SendText sends a text-only message; it assumes Type is text and Attr is empty.
 func(this*Plumb)SendText(src string,dst string,wdir string,data string)error{
@@ -318,7 +318,7 @@ return this.Send(m)
 /*18:*/
 
 
-//line goplumb.w:309
+//line goplumb.w:308
 
 //Recv returns a received message or an error.
 func(this*Plumb)Recv()(*Message,error){
@@ -364,7 +364,7 @@ return nil,errors.New("buffer too small")
 /*21:*/
 
 
-//line goplumb.w:385
+//line goplumb.w:384
 
 //Unpack return unpacked message.
 func Unpack(b[]byte)*Message{
@@ -381,7 +381,7 @@ return m
 /*23:*/
 
 
-//line goplumb.w:399
+//line goplumb.w:398
 
 //UnpackPartial helps to unpack messages splited in peaces.
 //The first call to UnpackPartial for a given message must be sufficient to unpack
@@ -431,15 +431,15 @@ return m,0
 /*25:*/
 
 
-//line goplumb.w:479
+//line goplumb.w:478
 
 //UnpackAttr unpack the attributes from s
-func UnpackAttr(s string)[]Attr{
-var attrs[]Attr
+func UnpackAttr(s string)Attrs{
+attrs:=make(Attrs)
 for i:=0;i<len(s);{
-var a Attr
+var n,v string
 for;i<len(s)&&s[i]!='=';i++{
-a.Name+= s[i:i+1]
+n+= s[i:i+1]
 }
 i++
 if i==len(s){
@@ -457,17 +457,17 @@ break
 }
 i++
 }
-a.Value+= s[i:i+1]
+v+= s[i:i+1]
 }
 i++
 }else{
 for;i<len(s)&&s[i]!=' ';i++{
-a.Value+= s[i:i+1]
+v+= s[i:i+1]
 }
 
 }
 i++
-attrs= append(attrs,a)
+attrs[n]= v
 }
 return attrs
 }
@@ -481,7 +481,7 @@ return attrs
 /*26:*/
 
 
-//line goplumb.w:520
+//line goplumb.w:519
 
 //Close closes a plumbing connection.
 func(this*Plumb)Close(){

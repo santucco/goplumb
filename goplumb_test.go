@@ -18,7 +18,7 @@ import(
 /*19:*/
 
 
-//line goplumb.w:347
+//line goplumb.w:346
 
 "errors"
 
@@ -72,8 +72,8 @@ m1.Type!=m2.Type||
 len(m1.Attr)!=len(m2.Attr){
 return false
 }
-for i:=0;i<len(m1.Attr);i++{
-if m1.Attr[i]!=m2.Attr[i]{
+for n,v:=range m1.Attr{
+if m2.Attr[n]!=v{
 return false
 }
 }
@@ -85,7 +85,7 @@ return bytes.Compare(m1.Data,m2.Data)==0
 /*11:*/
 
 
-//line goplumb.w:225
+//line goplumb.w:222
 
 func Test1(t*testing.T){
 prepare(t)
@@ -107,7 +107,7 @@ t.Fatal(err)
 /*20:*/
 
 
-//line goplumb.w:350
+//line goplumb.w:349
 
 func Test2(t*testing.T){
 rp,err:=Open("goplumb",os.O_RDONLY)
@@ -125,10 +125,10 @@ m.Src= "Test"
 m.Dst= "goplumb"
 m.Wdir= "."
 m.Type= "text"
-m.Attr= append([]Attr{},
-Attr{Name:"attr1",Value:"value1"},
-Attr{Name:"attr2",Value:"value2"},
-Attr{Name:"attr3",Value:"value = '3\t"})
+m.Attr= make(Attrs)
+m.Attr["attr1"]= "value1"
+m.Attr["attr2"]= "value2"
+m.Attr["attr3"]= "value = '3\t"
 m.Data= []byte("1234567890")
 if err:=sp.Send(&m);err!=nil{
 t.Fatal(err)
@@ -151,7 +151,7 @@ t.Fatal(errors.New("messages is not matched"))
 /*24:*/
 
 
-//line goplumb.w:441
+//line goplumb.w:440
 
 func Test3(t*testing.T){
 rp,err:=Open("goplumb",os.O_RDONLY)
@@ -169,10 +169,10 @@ m.Src= "Test"
 m.Dst= "goplumb"
 m.Wdir= "."
 m.Type= "text"
-m.Attr= append([]Attr{},
-Attr{Name:"attr1",Value:"value1"},
-Attr{Name:"attr2",Value:"value2"},
-Attr{Name:"attr3",Value:"value = '3\t"})
+m.Attr= make(Attrs)
+m.Attr["attr1"]= "value1"
+m.Attr["attr2"]= "value2"
+m.Attr["attr3"]= "value = '3\t"
 m.Data= make([]byte,0,9000)
 for i:=0;i<900;i++{
 m.Data= append(m.Data,[]byte("1234567890")...)
