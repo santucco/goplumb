@@ -532,7 +532,6 @@ this.ch= make(chan*Message)
 go func(ch chan<-*Message){
 for m,err:=this.Recv();err==nil;m,err= this.Recv(){
 ch<-m
-fmt.Fprintf(os.Stderr,"message: %v\n",*m)
 }
 close(ch)
 }(this.ch)

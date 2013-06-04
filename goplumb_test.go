@@ -31,7 +31,7 @@ import(
 /*29:*/
 
 
-//line goplumb.w:556
+//line goplumb.w:555
 
 "time"
 
@@ -209,7 +209,7 @@ t.Fatal(errors.New("messages is not matched"))
 /*30:*/
 
 
-//line goplumb.w:559
+//line goplumb.w:558
 
 func TestMessageChannel(t*testing.T){
 rp,err:=Open("goplumb",os.O_RDONLY)
