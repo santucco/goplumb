@@ -1,11 +1,11 @@
-% This file is part of goplumb package version 0.1
+% This file is part of goplumb package version 0.2
 % Author Alexander Sychev
 
-\def\title{goplumb (version 0.1)}
+\def\title{goplumb (version 0.2)}
 \def\topofcontents{\null\vfill
 	\centerline{\titlefont The {\ttitlefont goplumb} package for manipulating {\ttitlefont plumb} messages}
 	\vskip 15pt
-	\centerline{(version 0.1)}
+	\centerline{(version 0.2)}
 	\vfill}
 \def\botofcontents{\vfill
 \noindent
@@ -114,9 +114,10 @@ plumb to goplumb
 
 func prepare(t *testing.T) {
 	// checking for a running plumber instance
-	_,err:=os.Open(PlumberDir+"rules")
+	p,err:=os.Open(PlumberDir+"rules")
 	if err==nil {
 		t.Log("plumber started already")
+		p.Close()	
 	} else {
 		// start plumber
 		cmd:=exec.Command("plumber", "-m", PlumberDir)
@@ -132,11 +133,11 @@ func prepare(t *testing.T) {
 	if err!=nil	{
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_,err=f.Write([]byte(rule))
 	if err!=nil {
 		t.Fatal(err)
 	}
-	f.Close()
 }
 
 func compare(m1 *Message, m2 *Message) bool {
@@ -185,7 +186,8 @@ All fields of the |Plumb| are unexported.
 
 @ @<Types@>=
 Plumb struct {
-	f	*os.File	
+	f	*os.File
+	@<Other members of |Plumb|@>	
 }
 
 @ @<Variables@>=
@@ -220,7 +222,7 @@ func Open(port string, omode int) (*Plumb, error) {
 @ Let's test |Open| function.
 
 @<Test routines@>=
-func Test1(t *testing.T){
+func TestOpen(t *testing.T){
 	prepare(t)
 	if _,err:=Open("send", os.O_WRONLY); err!=nil {
 		t.Fatal(err)
@@ -347,17 +349,17 @@ func (this *Plumb) Recv() (*Message, error) {
 "errors"
 
 @ @<Test routines@>=
-func Test2(t *testing.T){
+func TestSendRecv(t *testing.T){
 	rp,err:=Open("goplumb", os.O_RDONLY)
 	if err!=nil {
 		t.Fatal(err)
 	}
-
+	defer rp.Close()
 	sp,err:=Open("send", os.O_WRONLY)
 	if err!=nil {
 		t.Fatal(err)
 	}
-
+	defer sp.Close()
 	var m Message
 	m.Src="Test"
 	m.Dst="goplumb"
@@ -371,7 +373,6 @@ func Test2(t *testing.T){
 	if err:=sp.Send(&m); err!=nil {
 		t.Fatal(err)
 	}
-	sp.Close()
 	t.Logf("message %#v has been sent\n", m)
 	r,err:=rp.Recv()
 	t.Logf("message %#v has been received\n", *r)
@@ -438,17 +439,17 @@ func UnpackPartial(b []byte) (m *Message, r int) {
 @ Let's test |Send| and |Recv| functions with a big message.
 
 @<Test routines@>=
-func Test3(t *testing.T){
+func TestSendRecvBigMessage(t *testing.T){
 	rp,err:=Open("goplumb", os.O_RDONLY)
 	if err!=nil {
 		t.Fatal(err)
 	}
-
+	defer rp.Close()
 	sp,err:=Open("send", os.O_WRONLY)
 	if err!=nil {
 		t.Fatal(err)
 	}
-
+	defer sp.Close()
 	var m Message
 	m.Src="Test"
 	m.Dst="goplumb"
@@ -465,7 +466,6 @@ func Test3(t *testing.T){
 	if err:=sp.Send(&m); err!=nil {
 		t.Fatal(err)
 	}
-	sp.Close()
 	t.Logf("message %#v has been sent\n", m)
 	r,err:=rp.Recv()
 	t.Logf("message %#v has been received\n", *r)
@@ -519,9 +519,83 @@ func UnpackAttr(s string) Attrs {
 @c
 //|Close| closes a plumbing connection.
 func (this *Plumb) Close() {
-	if this.f!=nil {
+	if this!=nil && this.f!=nil {
 		this.f.Close()
 		this.f=nil
+	}
+}
+
+@* MessageChannel.
+@<Other members of |Plumb|@>=
+ch	chan *Message
+
+@
+@c 
+// |MessageChannel| returns a channel of |*Message| from which messages can be read or |error|.
+// First call of |MessageChannel| starts a goroutine to read messages put them to the channel.
+// Subsequent calls of |EventChannel| will return the same channel.
+func (this *Plumb) MessageChannel() (<-chan *Message, error) {
+	if this==nil || this.f==nil {
+		return nil, os.ErrInvalid
+	}
+	if this.ch!=nil {
+		return this.ch, nil
+	}
+	this.ch=make(chan *Message)
+	go func(ch chan<- *Message) {
+		for m, err:=this.Recv(); err==nil; m, err=this.Recv() {
+			ch<-m
+			fmt.Fprintf(os.Stderr,"message: %v\n", *m)
+		}
+		close(ch)
+	} (this.ch)
+	return this.ch, nil
+}
+
+@ A test of |MessageChannel| function.
+@<Test specific imports@>=
+"time"
+@
+@<Test routines@>=
+func TestMessageChannel(t *testing.T){
+	rp,err:=Open("goplumb", os.O_RDONLY)
+	if err!=nil {
+		t.Fatal(err)
+	}
+	defer rp.Close()
+	sp,err:=Open("send", os.O_WRONLY)
+	if err!=nil {
+		t.Fatal(err)
+	}
+	defer sp.Close()
+
+	var m Message
+	m.Src="Test"
+	m.Dst="goplumb"
+	m.Wdir="."
+	m.Type="text"
+	m.Attr=make(Attrs)
+	m.Attr["attr1"]="value1"
+	m.Attr["attr2"]="value2"
+	m.Attr["attr3"]="value = '3\t"
+	m.Data=[]byte("1234567890")
+	ch,err:=rp.MessageChannel()
+	if err!=nil {
+		t.Fatal(err)
+	}
+	if err:=sp.Send(&m); err!=nil {
+		t.Fatal(err)
+	}
+	t.Logf("message %#v has been sent\n", m)
+	<-time.NewTimer(time.Second).C
+	rm,ok:=<-ch
+	if !ok {
+		t.Fatal(errors.New("messages channel is closed"))	
+	}
+	t.Logf("message %#v has been received\n", *rm)
+	
+	if !compare(rm,&m) {
+		t.Fatal(errors.New("messages is not matched"))
 	}
 }
 
