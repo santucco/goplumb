@@ -1,11 +1,11 @@
-% This file is part of goplumb package version 0.2
+% This file is part of goplumb package version 0.3
 % Author Alexander Sychev
 
-\def\title{goplumb (version 0.2)}
+\def\title{goplumb (version 0.3)}
 \def\topofcontents{\null\vfill
 	\centerline{\titlefont The {\ttitlefont goplumb} package for manipulating {\ttitlefont plumb} messages}
 	\vskip 15pt
-	\centerline{(version 0.2)}
+	\centerline{(version 0.3)}
 	\vfill}
 \def\botofcontents{\vfill
 \noindent
@@ -89,7 +89,7 @@ type (
 )@#
 
 var (
-	@<Variables@>
+@<Variables@>
 )@#
 
 @ Let's describe a begin of a test for the package. The \.{plumber} will be be started for the test.
@@ -98,11 +98,12 @@ var (
 package goplumb
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 	"bytes"
-	"syscall"
+	"time"
+	"code.google.com/p/goplan9/plan9"
+	"code.google.com/p/goplan9/plan9/client"
 	@<Test specific imports@>
 )@#
 
@@ -110,26 +111,32 @@ const rule = `type is text
 src is Test
 plumb to goplumb
 `
+var fs *client.Fsys
+
 @#
 
 func prepare(t *testing.T) {
 	// checking for a running plumber instance
-	p,err:=os.Open(PlumberDir+"rules")
+	var err error
+	fs,err=client.MountService("plumb")
 	if err==nil {
 		t.Log("plumber started already")
-		p.Close()	
 	} else {
 		// start plumber
-		cmd:=exec.Command("plumber", "-m", PlumberDir)
+		cmd:=exec.Command("plumber")
 		err=cmd.Run()
 		if err!=nil {
 			t.Fatal(err)
 		}
 		t.Log("plumber is starting, wait a second")
-		syscall.Nanosleep(&syscall.Timespec{Sec: 1,}, nil)
+		time.Sleep(time.Second)
+	}
+	fs,err=client.MountService("plumb")
+	if err!=nil {
+		t.Fatal(err)
 	}
 	// setting a rule for the test
-	f,err:=os.OpenFile(PlumberDir+"rules", os.O_WRONLY, 0600)
+	f,err:=fs.Open("rules", plan9.OWRITE)
 	if err!=nil	{
 		t.Fatal(err)
 	}
@@ -182,38 +189,46 @@ Attrs map[string]string
 All fields of the |Plumb| are unexported.
 
 @<Imports@>=
+"code.google.com/p/goplan9/plan9"
+"code.google.com/p/goplan9/plan9/client"
 "os"
 
 @ @<Types@>=
 Plumb struct {
-	f	*os.File
+	f	*client.Fid
 	@<Other members of |Plumb|@>	
 }
 
-@ @<Variables@>=
-//|PlumberDir| is a default mount point of plumber.
-PlumberDir string = "/mnt/plumb/"
-
 @* Open. At first if |port| is not an absolute filename, a slash is added if neccessary at the end of |port|. Then a file is opened with specified |omode|.
 
-@<Imports@>=
-"strings"
 
+@ At first we have to mount \.{plumber} namespace
+@<Variables@>=
+fsys	*client.Fsys
+sp		*Plumb
+rp		*Plumb
+
+@
+@<Imports@>=
+"sync"
+
+@
+@<Mount \.{plumber} namespace@>=
+{
+	var err error
+	new(sync.Once).Do(func(){fsys,err=client.MountService("plumb")})
+	if err!=nil {
+		return nil, err
+	}
+}
 @
 @c
 //|Open| opens a specified |port| with a specified |omode|.
-//If the |port| begin with a slash, it is taken as a literal file name,
-//otherwise it is a file name in the plumber file system at |PlumberDir|.
-func Open(port string, omode int) (*Plumb, error) {
-	if !strings.HasPrefix(port, "/") {
-		if !strings.HasSuffix(PlumberDir, "/") {
-			PlumberDir+="/"
-		}
-		port = PlumberDir+port
-	}
+func Open(port string, omode uint8) (*Plumb, error) {
+	@<Mount \.{plumber} namespace@>
 	var p Plumb
 	var err error
-	if p.f,err=os.OpenFile(port, omode, 0600); err!=nil {
+	if p.f,err=fsys.Open(port, omode); err!=nil {
 		return nil, err
 	}
 	return &p, nil
@@ -224,13 +239,13 @@ func Open(port string, omode int) (*Plumb, error) {
 @<Test routines@>=
 func TestOpen(t *testing.T){
 	prepare(t)
-	if _,err:=Open("send", os.O_WRONLY); err!=nil {
+	var err error
+	if sp,err=Open("send", plan9.OWRITE); err!=nil {
 		t.Fatal(err)
-	}
-
-	if _,err:=Open("goplumb", os.O_RDONLY); err!=nil {
+	} 
+	if rp,err=Open("goplumb", plan9.OREAD); err!=nil {
 		t.Fatal(err)
-	}
+	} 
 }
 
 @* Send. A |message| is packed and is written to the file. 
@@ -241,8 +256,20 @@ func (this *Plumb) Send(message *Message) error {
 		return os.ErrInvalid
 	}
 	b:=Pack(message)
-	_,err:=this.f.Write(b)
-	return err
+	// a workaround: \.{plumber} can't receive a message with length more that |8192-plan9.IOHDRSIZE|
+	@^workaround for \.{plumber}@>	
+	for len(b)>0 {
+		c:=8192-plan9.IOHDRSIZE
+		if len(b)<c {
+			c=len(b)
+		}	
+		c,err:=this.f.Write(b[:c])
+		if err!=nil {
+			return err
+		}
+		b=b[c:]
+	}
+	return nil
 }
 
 @* Pack. All the fields of a |message| are packed like a strings delimeted by newlines.
@@ -265,6 +292,10 @@ func Pack(message* Message) []byte {
 
 @* PackAttr. Attributes |attr| are packed like pairs |Name=Value| delimeted by spaces. 
 |Value| can be quoted if it is neccessary. 
+@<Imports@>=
+"strings"
+
+@
 @c
 //|PackAttr| packs |attr| to |string|. If an attribute value contains a white space,
 //a quote or an equal sign the value will be quoted.
@@ -350,16 +381,6 @@ func (this *Plumb) Recv() (*Message, error) {
 
 @ @<Test routines@>=
 func TestSendRecv(t *testing.T){
-	rp,err:=Open("goplumb", os.O_RDONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer rp.Close()
-	sp,err:=Open("send", os.O_WRONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer sp.Close()
 	var m Message
 	m.Src="Test"
 	m.Dst="goplumb"
@@ -375,6 +396,9 @@ func TestSendRecv(t *testing.T){
 	}
 	t.Logf("message %#v has been sent\n", m)
 	r,err:=rp.Recv()
+	if err!=nil {
+		t.Fatal(err)
+	}
 	t.Logf("message %#v has been received\n", *r)
 	if !compare(r,&m) {
 		t.Fatal(errors.New("messages is not matched"))
@@ -440,16 +464,6 @@ func UnpackPartial(b []byte) (m *Message, r int) {
 
 @<Test routines@>=
 func TestSendRecvBigMessage(t *testing.T){
-	rp,err:=Open("goplumb", os.O_RDONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer rp.Close()
-	sp,err:=Open("send", os.O_WRONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer sp.Close()
 	var m Message
 	m.Src="Test"
 	m.Dst="goplumb"
@@ -468,6 +482,9 @@ func TestSendRecvBigMessage(t *testing.T){
 	}
 	t.Logf("message %#v has been sent\n", m)
 	r,err:=rp.Recv()
+	if err!=nil {
+		t.Fatal(err)
+	}
 	t.Logf("message %#v has been received\n", *r)
 	if !compare(r,&m) {
 		t.Fatal(errors.New("messages is not matched"))
@@ -525,6 +542,8 @@ func (this *Plumb) Close() {
 	}
 }
 
+
+
 @* MessageChannel.
 @<Other members of |Plumb|@>=
 ch	chan *Message
@@ -552,22 +571,8 @@ func (this *Plumb) MessageChannel() (<-chan *Message, error) {
 }
 
 @ A test of |MessageChannel| function.
-@<Test specific imports@>=
-"time"
-@
 @<Test routines@>=
 func TestMessageChannel(t *testing.T){
-	rp,err:=Open("goplumb", os.O_RDONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer rp.Close()
-	sp,err:=Open("send", os.O_WRONLY)
-	if err!=nil {
-		t.Fatal(err)
-	}
-	defer sp.Close()
-
 	var m Message
 	m.Src="Test"
 	m.Dst="goplumb"
@@ -586,7 +591,7 @@ func TestMessageChannel(t *testing.T){
 		t.Fatal(err)
 	}
 	t.Logf("message %#v has been sent\n", m)
-	<-time.NewTimer(time.Second).C
+	time.Sleep(time.Second)
 	rm,ok:=<-ch
 	if !ok {
 		t.Fatal(errors.New("messages channel is closed"))	
@@ -596,6 +601,13 @@ func TestMessageChannel(t *testing.T){
 	if !compare(rm,&m) {
 		t.Fatal(errors.New("messages is not matched"))
 	}
+}
+
+@ A test of |Close| function.
+@<Test routines@>=
+func TestClose(t *testing.T) {
+	rp.Close()
+	sp.Close()
 }
 
 @** Index.

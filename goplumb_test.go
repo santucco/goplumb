@@ -8,38 +8,27 @@
 package goplumb
 
 import(
-"os"
 "os/exec"
 "testing"
 "bytes"
-"syscall"
+"time"
+"code.google.com/p/goplan9/plan9"
+"code.google.com/p/goplan9/plan9/client"
 
 
-/*19:*/
+/*22:*/
 
 
-//line goplumb.w:348
+//line goplumb.w:379
 
 "errors"
 
 
 
-/*:19*/
+/*:22*/
 
 
-
-/*29:*/
-
-
-//line goplumb.w:555
-
-"time"
-
-
-/*:29*/
-
-
-//line goplumb.w:106
+//line goplumb.w:107
 
 )
 
@@ -47,26 +36,32 @@ const rule= `type is text
 src is Test
 plumb to goplumb
 `
+var fs*client.Fsys
+
 
 
 func prepare(t*testing.T){
 // checking for a running plumber instance
-p,err:=os.Open(PlumberDir+"rules")
+var err error
+fs,err= client.MountService("plumb")
 if err==nil{
 t.Log("plumber started already")
-p.Close()
 }else{
 // start plumber
-cmd:=exec.Command("plumber","-m",PlumberDir)
+cmd:=exec.Command("plumber")
 err= cmd.Run()
 if err!=nil{
 t.Fatal(err)
 }
 t.Log("plumber is starting, wait a second")
-syscall.Nanosleep(&syscall.Timespec{Sec:1,},nil)
+time.Sleep(time.Second)
+}
+fs,err= client.MountService("plumb")
+if err!=nil{
+t.Fatal(err)
 }
 // setting a rule for the test
-f,err:=os.OpenFile(PlumberDir+"rules",os.O_WRONLY,0600)
+f,err:=fs.Open("rules",plan9.OWRITE)
 if err!=nil{
 t.Fatal(err)
 }
@@ -95,44 +90,34 @@ return bytes.Compare(m1.Data,m2.Data)==0
 
 
 
-/*11:*/
+/*13:*/
 
 
-//line goplumb.w:224
+//line goplumb.w:239
 
 func TestOpen(t*testing.T){
 prepare(t)
-if _,err:=Open("send",os.O_WRONLY);err!=nil{
+var err error
+if sp,err= Open("send",plan9.OWRITE);err!=nil{
 t.Fatal(err)
 }
-
-if _,err:=Open("goplumb",os.O_RDONLY);err!=nil{
+if rp,err= Open("goplumb",plan9.OREAD);err!=nil{
 t.Fatal(err)
 }
 }
 
 
 
-/*:11*/
+/*:13*/
 
 
 
-/*20:*/
+/*23:*/
 
 
-//line goplumb.w:351
+//line goplumb.w:382
 
 func TestSendRecv(t*testing.T){
-rp,err:=Open("goplumb",os.O_RDONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer rp.Close()
-sp,err:=Open("send",os.O_WRONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer sp.Close()
 var m Message
 m.Src= "Test"
 m.Dst= "goplumb"
@@ -148,6 +133,9 @@ t.Fatal(err)
 }
 t.Logf("message %#v has been sent\n",m)
 r,err:=rp.Recv()
+if err!=nil{
+t.Fatal(err)
+}
 t.Logf("message %#v has been received\n",*r)
 if!compare(r,&m){
 t.Fatal(errors.New("messages is not matched"))
@@ -156,26 +144,16 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:20*/
+/*:23*/
 
 
 
-/*24:*/
+/*27:*/
 
 
-//line goplumb.w:441
+//line goplumb.w:465
 
 func TestSendRecvBigMessage(t*testing.T){
-rp,err:=Open("goplumb",os.O_RDONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer rp.Close()
-sp,err:=Open("send",os.O_WRONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer sp.Close()
 var m Message
 m.Src= "Test"
 m.Dst= "goplumb"
@@ -194,6 +172,9 @@ t.Fatal(err)
 }
 t.Logf("message %#v has been sent\n",m)
 r,err:=rp.Recv()
+if err!=nil{
+t.Fatal(err)
+}
 t.Logf("message %#v has been received\n",*r)
 if!compare(r,&m){
 t.Fatal(errors.New("messages is not matched"))
@@ -202,27 +183,16 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:24*/
+/*:27*/
 
 
 
-/*30:*/
+/*32:*/
 
 
-//line goplumb.w:558
+//line goplumb.w:574
 
 func TestMessageChannel(t*testing.T){
-rp,err:=Open("goplumb",os.O_RDONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer rp.Close()
-sp,err:=Open("send",os.O_WRONLY)
-if err!=nil{
-t.Fatal(err)
-}
-defer sp.Close()
-
 var m Message
 m.Src= "Test"
 m.Dst= "goplumb"
@@ -241,7 +211,7 @@ if err:=sp.Send(&m);err!=nil{
 t.Fatal(err)
 }
 t.Logf("message %#v has been sent\n",m)
-<-time.NewTimer(time.Second).C
+time.Sleep(time.Second)
 rm,ok:=<-ch
 if!ok{
 t.Fatal(errors.New("messages channel is closed"))
@@ -255,10 +225,26 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:30*/
+/*:32*/
 
 
-//line goplumb.w:159
+
+/*33:*/
+
+
+//line goplumb.w:607
+
+func TestClose(t*testing.T){
+rp.Close()
+sp.Close()
+}
+
+
+
+/*:33*/
+
+
+//line goplumb.w:166
 
 
 

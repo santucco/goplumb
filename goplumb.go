@@ -41,8 +41,10 @@ import(
 /*6:*/
 
 
-//line goplumb.w:184
+//line goplumb.w:191
 
+"code.google.com/p/goplan9/plan9"
+"code.google.com/p/goplan9/plan9/client"
 "os"
 
 
@@ -51,39 +53,38 @@ import(
 
 
 
-/*9:*/
+/*10:*/
 
 
-//line goplumb.w:199
+//line goplumb.w:212
 
-"strings"
-
-
-
-/*:9*/
+"sync"
 
 
 
-/*13:*/
+/*:10*/
 
 
-//line goplumb.w:250
+
+/*15:*/
+
+
+//line goplumb.w:277
 
 "fmt"
 
 
 
-/*:13*/
+/*:15*/
 
 
 
 /*17:*/
 
 
-//line goplumb.w:305
+//line goplumb.w:295
 
-"errors"
-"io"
+"strings"
 
 
 
@@ -91,17 +92,31 @@ import(
 
 
 
-/*22:*/
+/*20:*/
 
 
-//line goplumb.w:394
+//line goplumb.w:336
+
+"errors"
+"io"
+
+
+
+/*:20*/
+
+
+
+/*25:*/
+
+
+//line goplumb.w:418
 
 "bytes"
 "strconv"
 
 
 
-/*:22*/
+/*:25*/
 
 
 //line goplumb.w:84
@@ -114,7 +129,7 @@ type(
 /*4:*/
 
 
-//line goplumb.w:164
+//line goplumb.w:171
 
 //Message desribes a plumber message.
 Message struct{
@@ -135,7 +150,7 @@ Data[]byte
 /*5:*/
 
 
-//line goplumb.w:176
+//line goplumb.w:183
 
 //Attrs is a map of an attribute of a plumber message.
 Attrs map[string]string
@@ -150,25 +165,25 @@ Attrs map[string]string
 /*7:*/
 
 
-//line goplumb.w:187
+//line goplumb.w:196
 
 Plumb struct{
-f*os.File
+f*client.Fid
 
 
-/*27:*/
+/*30:*/
 
 
-//line goplumb.w:529
+//line goplumb.w:548
 
 ch chan*Message
 
 
 
-/*:27*/
+/*:30*/
 
 
-//line goplumb.w:190
+//line goplumb.w:199
 
 }
 
@@ -184,17 +199,18 @@ ch chan*Message
 var(
 
 
-/*8:*/
+/*9:*/
 
 
-//line goplumb.w:193
+//line goplumb.w:206
 
-//PlumberDir is a default mount point of plumber.
-PlumberDir string= "/mnt/plumb/"
+fsys*client.Fsys
+sp*Plumb
+rp*Plumb
 
 
 
-/*:8*/
+/*:9*/
 
 
 //line goplumb.w:92
@@ -207,48 +223,40 @@ PlumberDir string= "/mnt/plumb/"
 
 
 
-/*10:*/
-
-
-//line goplumb.w:203
-
-//Open opens a specified port with a specified omode.
-//If the port begin with a slash, it is taken as a literal file name,
-//otherwise it is a file name in the plumber file system at PlumberDir.
-func Open(port string,omode int)(*Plumb,error){
-if!strings.HasPrefix(port,"/"){
-if!strings.HasSuffix(PlumberDir,"/"){
-PlumberDir+= "/"
-}
-port= PlumberDir+port
-}
-var p Plumb
-var err error
-if p.f,err= os.OpenFile(port,omode,0600);err!=nil{
-return nil,err
-}
-return&p,nil
-}
-
-
-
-/*:10*/
-
-
-
 /*12:*/
 
 
-//line goplumb.w:237
+//line goplumb.w:225
 
-//Send sends a message.
-func(this*Plumb)Send(message*Message)error{
-if this==nil||this.f==nil||message==nil{
-return os.ErrInvalid
+//Open opens a specified port with a specified omode.
+func Open(port string,omode uint8)(*Plumb,error){
+
+
+/*11:*/
+
+
+//line goplumb.w:216
+
+{
+var err error
+new(sync.Once).Do(func(){fsys,err= client.MountService("plumb")})
+if err!=nil{
+return nil,err
 }
-b:=Pack(message)
-_,err:=this.f.Write(b)
-return err
+}
+
+
+/*:11*/
+
+
+//line goplumb.w:228
+
+var p Plumb
+var err error
+if p.f,err= fsys.Open(port,omode);err!=nil{
+return nil,err
+}
+return&p,nil
 }
 
 
@@ -260,7 +268,40 @@ return err
 /*14:*/
 
 
-//line goplumb.w:254
+//line goplumb.w:252
+
+//Send sends a message.
+func(this*Plumb)Send(message*Message)error{
+if this==nil||this.f==nil||message==nil{
+return os.ErrInvalid
+}
+b:=Pack(message)
+// a workaround: \.{plumber} can't receive a message with length more that 8192-plan9.IOHDRSIZE
+
+for len(b)> 0{
+c:=8192-plan9.IOHDRSIZE
+if len(b)<c{
+c= len(b)
+}
+c,err:=this.f.Write(b[:c])
+if err!=nil{
+return err
+}
+b= b[c:]
+}
+return nil
+}
+
+
+
+/*:14*/
+
+
+
+/*16:*/
+
+
+//line goplumb.w:281
 
 //Pack packs a message to []byte.
 func Pack(message*Message)[]byte{
@@ -275,14 +316,14 @@ return append(b,message.Data...)
 
 
 
-/*:14*/
+/*:16*/
 
 
 
-/*15:*/
+/*18:*/
 
 
-//line goplumb.w:268
+//line goplumb.w:299
 
 //PackAttr packs attr to string. If an attribute value contains a white space,
 //a quote or an equal sign the value will be quoted.
@@ -305,14 +346,14 @@ return s
 
 
 
-/*:15*/
+/*:18*/
 
 
 
-/*16:*/
+/*19:*/
 
 
-//line goplumb.w:289
+//line goplumb.w:320
 
 //SendText sends a text-only message; it assumes Type is text and Attr is empty.
 func(this*Plumb)SendText(src string,dst string,wdir string,data string)error{
@@ -327,14 +368,14 @@ return this.Send(m)
 
 
 
-/*:16*/
+/*:19*/
 
 
 
-/*18:*/
+/*21:*/
 
 
-//line goplumb.w:310
+//line goplumb.w:341
 
 //Recv returns a received message or an error.
 func(this*Plumb)Recv()(*Message,error){
@@ -373,14 +414,14 @@ return nil,errors.New("buffer too small")
 
 
 
-/*:18*/
+/*:21*/
 
 
 
-/*21:*/
+/*24:*/
 
 
-//line goplumb.w:385
+//line goplumb.w:409
 
 //Unpack return unpacked message.
 func Unpack(b[]byte)*Message{
@@ -390,14 +431,14 @@ return m
 
 
 
-/*:21*/
+/*:24*/
 
 
 
-/*23:*/
+/*26:*/
 
 
-//line goplumb.w:399
+//line goplumb.w:423
 
 //UnpackPartial helps to unpack messages splited in peaces.
 //The first call to UnpackPartial for a given message must be sufficient to unpack
@@ -440,14 +481,14 @@ return m,0
 
 
 
-/*:23*/
+/*:26*/
 
 
 
-/*25:*/
+/*28:*/
 
 
-//line goplumb.w:478
+//line goplumb.w:495
 
 //UnpackAttr unpack the attributes from s
 func UnpackAttr(s string)Attrs{
@@ -490,14 +531,14 @@ return attrs
 
 
 
-/*:25*/
+/*:28*/
 
 
 
-/*26:*/
+/*29:*/
 
 
-//line goplumb.w:519
+//line goplumb.w:536
 
 //Close closes a plumbing connection.
 func(this*Plumb)Close(){
@@ -509,14 +550,16 @@ this.f= nil
 
 
 
-/*:26*/
+
+
+/*:29*/
 
 
 
-/*28:*/
+/*31:*/
 
 
-//line goplumb.w:533
+//line goplumb.w:552
 
 // MessageChannel returns a channel of *Message from which messages can be read or error.
 // First call of MessageChannel starts a goroutine to read messages put them to the channel.
@@ -540,6 +583,6 @@ return this.ch,nil
 
 
 
-/*:28*/
+/*:31*/
 
 
