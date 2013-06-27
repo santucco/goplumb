@@ -3,7 +3,7 @@
 /*2:*/
 
 
-//line goplumb.w:52
+//line goplumb.w:51
 
 // Copyright (c) 2013 Alexander Sychev. All rights reserved.
 //
@@ -32,16 +32,27 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+
+/*:2*/
+
+
+
+/*3:*/
+
+
+//line goplumb.w:80
+
 // Package goplumb provides interface to plumber - interprocess messaging from Plan 9.
 package goplumb
 
 import(
 
 
-/*6:*/
+/*7:*/
 
 
-//line goplumb.w:191
+//line goplumb.w:192
 
 "code.google.com/p/goplan9/plan9"
 "code.google.com/p/goplan9/plan9/client"
@@ -49,89 +60,89 @@ import(
 
 
 
-/*:6*/
+/*:7*/
 
 
 
-/*10:*/
+/*11:*/
 
 
-//line goplumb.w:212
+//line goplumb.w:213
 
 "sync"
 
 
 
-/*:10*/
+/*:11*/
 
 
 
-/*15:*/
+/*16:*/
 
 
-//line goplumb.w:277
+//line goplumb.w:278
 
 "fmt"
 
 
 
-/*:15*/
+/*:16*/
 
 
 
-/*17:*/
+/*18:*/
 
 
-//line goplumb.w:295
+//line goplumb.w:296
 
 "strings"
 
 
 
-/*:17*/
+/*:18*/
 
 
 
-/*20:*/
+/*21:*/
 
 
-//line goplumb.w:336
+//line goplumb.w:338
 
 "errors"
 "io"
 
 
 
-/*:20*/
+/*:21*/
 
 
 
-/*25:*/
+/*26:*/
 
 
-//line goplumb.w:418
+//line goplumb.w:420
 
 "bytes"
 "strconv"
 
 
 
-/*:25*/
+/*:26*/
 
 
-//line goplumb.w:84
+//line goplumb.w:85
 
 )
 
 type(
 
 
-/*4:*/
+/*5:*/
 
 
-//line goplumb.w:171
+//line goplumb.w:172
 
-//Message desribes a plumber message.
+// Message desribes a plumber message.
 Message struct{
 Src string
 Dst string
@@ -143,66 +154,66 @@ Data[]byte
 
 
 
-/*:4*/
+/*:5*/
 
 
 
-/*5:*/
+/*6:*/
 
 
-//line goplumb.w:183
+//line goplumb.w:184
 
-//Attrs is a map of an attribute of a plumber message.
+// Attrs is a map of an attribute of a plumber message.
 Attrs map[string]string
 
 
 
 
-/*:5*/
+/*:6*/
 
 
 
-/*7:*/
+/*8:*/
 
 
-//line goplumb.w:196
+//line goplumb.w:197
 
 Plumb struct{
 f*client.Fid
 
 
-/*30:*/
+/*31:*/
 
 
-//line goplumb.w:548
+//line goplumb.w:550
 
 ch chan*Message
 
 
 
-/*:30*/
+/*:31*/
 
 
-//line goplumb.w:199
+//line goplumb.w:200
 
 }
 
 
 
-/*:7*/
+/*:8*/
 
 
-//line goplumb.w:88
+//line goplumb.w:89
 
 )
 
 var(
 
 
-/*9:*/
+/*10:*/
 
 
-//line goplumb.w:206
+//line goplumb.w:207
 
 fsys*client.Fsys
 sp*Plumb
@@ -210,32 +221,32 @@ rp*Plumb
 
 
 
-/*:9*/
+/*:10*/
 
 
-//line goplumb.w:92
+//line goplumb.w:93
 
 )
 
 
 
-/*:2*/
+/*:3*/
 
+
+
+/*13:*/
+
+
+//line goplumb.w:226
+
+// Open opens a specified port with a specified omode and returns *Plumb or error
+func Open(port string,omode uint8)(*Plumb,error){
 
 
 /*12:*/
 
 
-//line goplumb.w:225
-
-//Open opens a specified port with a specified omode.
-func Open(port string,omode uint8)(*Plumb,error){
-
-
-/*11:*/
-
-
-//line goplumb.w:216
+//line goplumb.w:217
 
 {
 var err error
@@ -246,10 +257,10 @@ return nil,err
 }
 
 
-/*:11*/
+/*:12*/
 
 
-//line goplumb.w:228
+//line goplumb.w:229
 
 var p Plumb
 var err error
@@ -261,16 +272,16 @@ return&p,nil
 
 
 
-/*:12*/
+/*:13*/
 
 
 
-/*14:*/
+/*15:*/
 
 
-//line goplumb.w:252
+//line goplumb.w:253
 
-//Send sends a message.
+// Send sends a message and returns error if any.
 func(this*Plumb)Send(message*Message)error{
 if this==nil||this.f==nil||message==nil{
 return os.ErrInvalid
@@ -294,16 +305,16 @@ return nil
 
 
 
-/*:14*/
+/*:15*/
 
 
 
-/*16:*/
+/*17:*/
 
 
-//line goplumb.w:281
+//line goplumb.w:282
 
-//Pack packs a message to []byte.
+// Pack packs a message to []byte.
 func Pack(message*Message)[]byte{
 s:=fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%d\n",
 message.Src,message.Dst,
@@ -316,17 +327,17 @@ return append(b,message.Data...)
 
 
 
-/*:16*/
+/*:17*/
 
 
 
-/*18:*/
+/*19:*/
 
 
-//line goplumb.w:299
+//line goplumb.w:300
 
-//PackAttr packs attr to string. If an attribute value contains a white space,
-//a quote or an equal sign the value will be quoted.
+// PackAttr packs attr to string. If an attribute value contains a white space,
+// a quote or an equal sign the value will be quoted.
 func PackAttr(attr Attrs)string{
 var s string
 first:=true
@@ -346,16 +357,17 @@ return s
 
 
 
-/*:18*/
+/*:19*/
 
 
 
-/*19:*/
+/*20:*/
 
 
-//line goplumb.w:320
+//line goplumb.w:321
 
-//SendText sends a text-only message; it assumes Type is text and Attr is empty.
+// SendText sends a text-only message; it assumes Type is text and Attr is empty.
+// SendText returns error if any.
 func(this*Plumb)SendText(src string,dst string,wdir string,data string)error{
 m:=&Message{
 Src:src,
@@ -368,16 +380,16 @@ return this.Send(m)
 
 
 
-/*:19*/
+/*:20*/
 
 
 
-/*21:*/
+/*22:*/
 
 
-//line goplumb.w:341
+//line goplumb.w:343
 
-//Recv returns a received message or an error.
+// Recv returns a pointer to a received message *Message or error.
 func(this*Plumb)Recv()(*Message,error){
 if this==nil||this.f==nil{
 return nil,os.ErrInvalid
@@ -414,16 +426,16 @@ return nil,errors.New("buffer too small")
 
 
 
-/*:21*/
+/*:22*/
 
 
 
-/*24:*/
+/*25:*/
 
 
-//line goplumb.w:409
+//line goplumb.w:411
 
-//Unpack return unpacked message.
+// Unpack return a pointer to an unpacked message *Message.
 func Unpack(b[]byte)*Message{
 m,_:=UnpackPartial(b)
 return m
@@ -431,27 +443,27 @@ return m
 
 
 
-/*:24*/
+/*:25*/
 
 
 
-/*26:*/
+/*27:*/
 
 
-//line goplumb.w:423
+//line goplumb.w:425
 
-//UnpackPartial helps to unpack messages splited in peaces.
-//The first call to UnpackPartial for a given message must be sufficient to unpack
-//the header; subsequent calls permit unpacking messages with long data sections.
-//For each call, b contans the complete message received so far.
-//If the message is complete, a pointer to the resulting message m will be returned,
-//and a number of remainings bytes r will be set to 0.
-//Otherwise m will be nil and r will be set to the number of bytes
-//remaining to be read for this message
-//to be complete (recall that the byte count is in the header).
-//Those bytes should be read by the caller, placed at location b[r:],
-//and the message unpacked again.
-//If an error is encountered, m will be nil and r will be zero.
+// UnpackPartial helps to unpack messages splited in peaces.
+// The first call to UnpackPartial for a given message must be sufficient to unpack
+// the header; subsequent calls permit unpacking messages with long data sections.
+// For each call, b contans the complete message received so far.
+// If the message is complete, a pointer to the resulting message m will be returned,
+// and a number of remainings bytes r will be set to 0.
+// Otherwise m will be nil and r will be set to the number of bytes
+// remaining to be read for this message
+// to be complete (recall that the byte count is in the header).
+// Those bytes should be read by the caller, placed at location b[r:],
+// and the message unpacked again.
+// If an error is encountered, m will be nil and r will be zero.
 func UnpackPartial(b[]byte)(m*Message,r int){
 bb:=bytes.Split(b,[]byte{'\n'})
 if len(bb)<6{
@@ -481,16 +493,16 @@ return m,0
 
 
 
-/*:26*/
+/*:27*/
 
 
 
-/*28:*/
+/*29:*/
 
 
-//line goplumb.w:495
+//line goplumb.w:497
 
-//UnpackAttr unpack the attributes from s
+// UnpackAttr unpack the attributes from s to Attrs
 func UnpackAttr(s string)Attrs{
 attrs:=make(Attrs)
 for i:=0;i<len(s);{
@@ -531,16 +543,16 @@ return attrs
 
 
 
-/*:28*/
+/*:29*/
 
 
 
-/*29:*/
+/*30:*/
 
 
-//line goplumb.w:536
+//line goplumb.w:538
 
-//Close closes a plumbing connection.
+// Close closes the plumbing connection.
 func(this*Plumb)Close(){
 if this!=nil&&this.f!=nil{
 this.f.Close()
@@ -552,26 +564,27 @@ this.f= nil
 
 
 
-/*:29*/
+/*:30*/
 
 
 
-/*31:*/
+/*32:*/
 
 
-//line goplumb.w:552
+//line goplumb.w:554
 
-// MessageChannel returns a channel of *Message from which messages can be read or error.
+// MessageChannel returns a channel of *Message with a buffer size
+// from which messages can be read or error.
 // First call of MessageChannel starts a goroutine to read messages put them to the channel.
 // Subsequent calls of EventChannel will return the same channel.
-func(this*Plumb)MessageChannel()(<-chan*Message,error){
+func(this*Plumb)MessageChannel(size int)(<-chan*Message,error){
 if this==nil||this.f==nil{
 return nil,os.ErrInvalid
 }
 if this.ch!=nil{
 return this.ch,nil
 }
-this.ch= make(chan*Message)
+this.ch= make(chan*Message,size)
 go func(ch chan<-*Message){
 for m,err:=this.Recv();err==nil;m,err= this.Recv(){
 ch<-m
@@ -583,6 +596,6 @@ return this.ch,nil
 
 
 
-/*:31*/
+/*:32*/
 
 

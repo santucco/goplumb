@@ -1,11 +1,11 @@
-% This file is part of goplumb package version 0.3
+% This file is part of goplumb package version 0.4
 % Author Alexander Sychev
 
-\def\title{goplumb (version 0.3)}
+\def\title{goplumb (version 0.4)}
 \def\topofcontents{\null\vfill
 	\centerline{\titlefont The {\ttitlefont goplumb} package for manipulating {\ttitlefont plumb} messages}
 	\vskip 15pt
-	\centerline{(version 0.3)}
+	\centerline{(version 0.4)}
 	\vfill}
 \def\botofcontents{\vfill
 \noindent
@@ -45,10 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @** Introduction.
 In a great operating system \.{Plan 9} there is a \.{plumber} - a filesystem for interprocess messaging.
 The \.{goplumb} package is implemented to manipulate such messages. The main target of the package is support of 
-\.{plumber} from \.{Plan 9 from User Space} project http://swtch.com/plan9port/, but I hope it will work
-in original \.{Plan 9} too.
+\.{plumber} from \.{Plan 9 from User Space} project http:// swtch.com/plan9port/.
 
-@** The package \.{goplumb}.
+@ Legal information.
 @c
 // Copyright (c) 2013 Alexander Sychev. All rights reserved.
 //
@@ -76,7 +75,9 @@ in original \.{Plan 9} too.
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-@#
+
+@** Implementation.
+@c
 // Package goplumb provides interface to plumber - interprocess messaging from Plan 9.
 package goplumb
 
@@ -169,7 +170,7 @@ func compare(m1 *Message, m2 *Message) bool {
 @ At first let's describe |Message| structure. Actually it is almost the same like the original \.{Plan 9} {\mc C\spacefactor1000}-struct. |Src| is a source of a message; |Dst| is a destination; |Wdir| is a working directory; |Type| is a type of the message, usually |text|; |Attr| is a slice of attributes of the message where an attribute is a pair of |name=value|; |Data| is a binary data of the message.
 
 @<Types@>=
-//|Message| desribes a plumber message.
+// |Message| desribes a plumber message.
 Message struct {
 	Src		string
 	Dst		string
@@ -181,7 +182,7 @@ Message struct {
 
 @
 @<Types@>=
-//|Attrs| is a map of an attribute of a plumber message.
+// |Attrs| is a map of an attribute of a plumber message.
 Attrs map[string]string
 
 
@@ -223,7 +224,7 @@ rp		*Plumb
 }
 @
 @c
-//|Open| opens a specified |port| with a specified |omode|.
+// |Open| opens a specified |port| with a specified |omode| and returns |*Plumb| or |error|
 func Open(port string, omode uint8) (*Plumb, error) {
 	@<Mount \.{plumber} namespace@>
 	var p Plumb
@@ -250,7 +251,7 @@ func TestOpen(t *testing.T){
 
 @* Send. A |message| is packed and is written to the file. 
 @c
-//|Send| sends a |message|.
+// |Send| sends a |message| and returns |error| if any.
 func (this *Plumb) Send(message *Message) error {
 	if this==nil || this.f==nil || message==nil {
 		return os.ErrInvalid
@@ -279,7 +280,7 @@ func (this *Plumb) Send(message *Message) error {
 
 @
 @c
-//|Pack| packs a |message| to |[]byte|.
+// |Pack| packs a |message| to |[]byte|.
 func Pack(message* Message) []byte {
 	s:=fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%d\n", @t\1@>@/
 			message.Src, message.Dst, @/
@@ -297,8 +298,8 @@ func Pack(message* Message) []byte {
 
 @
 @c
-//|PackAttr| packs |attr| to |string|. If an attribute value contains a white space,
-//a quote or an equal sign the value will be quoted.
+// |PackAttr| packs |attr| to |string|. If an attribute value contains a white space,
+// a quote or an equal sign the value will be quoted.
 func PackAttr(attr Attrs) string {
 	var s string
 	first:=true
@@ -318,7 +319,8 @@ func PackAttr(attr Attrs) string {
 
 @* SendText. A message is composed from |Src=src|, |Dst=dst|, |Wdir=wdir| and |Type=text|
 @c
-//|SendText| sends a text-only message; it assumes |Type| is text and |Attr| is empty.
+// |SendText| sends a text-only message; it assumes |Type| is text and |Attr| is empty.
+// |SendText| returns |error| if any.
 func (this *Plumb) SendText(src string, dst string, wdir string, data string) error {
 	m:=&Message{@t\1@>@/
 		Src: src, @/
@@ -339,7 +341,7 @@ is unpacked.
 
 @
 @c
-//|Recv| returns a received message or an |error|.
+// |Recv| returns a pointer to a received message |*Message| or |error|.
 func (this *Plumb) Recv() (*Message, error) {
 	if this==nil || this.f==nil {
 		return nil, os.ErrInvalid
@@ -407,7 +409,7 @@ func TestSendRecv(t *testing.T){
 
 @* Unpack. |Unpack| just recalls |UnpackPartial| and ignores a rest of a message if the message is too big.
 @c
-//|Unpack| return unpacked message.
+// |Unpack| return a pointer to an unpacked message |*Message|.
 func Unpack(b []byte) *Message {
 	m,_:=UnpackPartial(b)
 	return m
@@ -421,18 +423,18 @@ func Unpack(b []byte) *Message {
 
 @
 @c
-//|UnpackPartial| helps to unpack messages splited in peaces.
-//The first call to |UnpackPartial| for a given message must be sufficient to unpack
-//the header; subsequent calls permit unpacking messages with long data sections.
-//For each call, |b| contans the complete message received so far.
-//If the message is complete, a pointer to the resulting message |m| will be returned,
-//and a number of remainings bytes |r| will be set to 0.
-//Otherwise |m| will be nil and |r| will be set to the number of bytes
-//remaining to be read for this message
-//to be complete (recall that the byte count is in the header).
-//Those bytes should be read by the caller, placed at location |b[r:]|,
-//and the message unpacked again.
-//If an error is encountered, |m| will be nil and |r| will be zero.
+// |UnpackPartial| helps to unpack messages splited in peaces.
+// The first call to |UnpackPartial| for a given message must be sufficient to unpack
+// the header; subsequent calls permit unpacking messages with long data sections.
+// For each call, |b| contans the complete message received so far.
+// If the message is complete, a pointer to the resulting message |m| will be returned,
+// and a number of remainings bytes |r| will be set to 0.
+// Otherwise |m| will be nil and |r| will be set to the number of bytes
+// remaining to be read for this message
+// to be complete (recall that the byte count is in the header).
+// Those bytes should be read by the caller, placed at location |b[r:]|,
+// and the message unpacked again.
+// If an error is encountered, |m| will be nil and |r| will be zero.
 func UnpackPartial(b []byte) (m *Message, r int) {
 	bb:=bytes.Split(b, []byte{'\n'})
 	if len(bb) < 6 {
@@ -493,7 +495,7 @@ func TestSendRecvBigMessage(t *testing.T){
 
 @* UnpackAttr. |UnpackAttr| unpacks attributes from |s|, unquotes values if it is neccessary.
 @c
-//|UnpackAttr| unpack the attributes from |s|
+// |UnpackAttr| unpack the attributes from |s| to |Attrs|
 func UnpackAttr(s string) Attrs {
 	attrs:=make(Attrs)
 	for i:=0; i<len(s); {
@@ -534,7 +536,7 @@ func UnpackAttr(s string) Attrs {
 
 @* Close. |Close| just closes an underlying |f|.
 @c
-//|Close| closes a plumbing connection.
+// |Close| closes the plumbing connection.
 func (this *Plumb) Close() {
 	if this!=nil && this.f!=nil {
 		this.f.Close()
@@ -550,17 +552,18 @@ ch	chan *Message
 
 @
 @c 
-// |MessageChannel| returns a channel of |*Message| from which messages can be read or |error|.
+// |MessageChannel| returns a channel of |*Message| with a buffer |size|
+// from which messages can be read or |error|.
 // First call of |MessageChannel| starts a goroutine to read messages put them to the channel.
 // Subsequent calls of |EventChannel| will return the same channel.
-func (this *Plumb) MessageChannel() (<-chan *Message, error) {
+func (this *Plumb) MessageChannel(size int) (<-chan *Message, error) {
 	if this==nil || this.f==nil {
 		return nil, os.ErrInvalid
 	}
 	if this.ch!=nil {
 		return this.ch, nil
 	}
-	this.ch=make(chan *Message)
+	this.ch=make(chan *Message, size)
 	go func(ch chan<- *Message) {
 		for m, err:=this.Recv(); err==nil; m, err=this.Recv() {
 			ch<-m
@@ -583,7 +586,7 @@ func TestMessageChannel(t *testing.T){
 	m.Attr["attr2"]="value2"
 	m.Attr["attr3"]="value = '3\t"
 	m.Data=[]byte("1234567890")
-	ch,err:=rp.MessageChannel()
+	ch,err:=rp.MessageChannel(0)
 	if err!=nil {
 		t.Fatal(err)
 	}

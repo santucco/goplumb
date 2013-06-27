@@ -1,9 +1,9 @@
 
 
-/*3:*/
+/*4:*/
 
 
-//line goplumb.w:97
+//line goplumb.w:98
 
 package goplumb
 
@@ -16,19 +16,19 @@ import(
 "code.google.com/p/goplan9/plan9/client"
 
 
-/*22:*/
+/*23:*/
 
 
-//line goplumb.w:379
+//line goplumb.w:381
 
 "errors"
 
 
 
-/*:22*/
+/*:23*/
 
 
-//line goplumb.w:107
+//line goplumb.w:108
 
 )
 
@@ -90,10 +90,10 @@ return bytes.Compare(m1.Data,m2.Data)==0
 
 
 
-/*13:*/
+/*14:*/
 
 
-//line goplumb.w:239
+//line goplumb.w:240
 
 func TestOpen(t*testing.T){
 prepare(t)
@@ -108,14 +108,14 @@ t.Fatal(err)
 
 
 
-/*:13*/
+/*:14*/
 
 
 
-/*23:*/
+/*24:*/
 
 
-//line goplumb.w:382
+//line goplumb.w:384
 
 func TestSendRecv(t*testing.T){
 var m Message
@@ -144,14 +144,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:23*/
+/*:24*/
 
 
 
-/*27:*/
+/*28:*/
 
 
-//line goplumb.w:465
+//line goplumb.w:467
 
 func TestSendRecvBigMessage(t*testing.T){
 var m Message
@@ -183,14 +183,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:27*/
+/*:28*/
 
 
 
-/*32:*/
+/*33:*/
 
 
-//line goplumb.w:574
+//line goplumb.w:577
 
 func TestMessageChannel(t*testing.T){
 var m Message
@@ -203,7 +203,7 @@ m.Attr["attr1"]= "value1"
 m.Attr["attr2"]= "value2"
 m.Attr["attr3"]= "value = '3\t"
 m.Data= []byte("1234567890")
-ch,err:=rp.MessageChannel()
+ch,err:=rp.MessageChannel(0)
 if err!=nil{
 t.Fatal(err)
 }
@@ -225,14 +225,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:32*/
+/*:33*/
 
 
 
-/*33:*/
+/*34:*/
 
 
-//line goplumb.w:607
+//line goplumb.w:610
 
 func TestClose(t*testing.T){
 rp.Close()
@@ -241,15 +241,15 @@ sp.Close()
 
 
 
-/*:33*/
+/*:34*/
 
 
-//line goplumb.w:166
+//line goplumb.w:167
 
 
 
 
 
-/*:3*/
+/*:4*/
 
 
