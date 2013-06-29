@@ -14,14 +14,14 @@ Copyright \copyright\ 2013 Alexander Sychev. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-\yskip\item{$\bullet$}Redistributions of source code must retain the 
+\yskip\item{$\bullet$}Redistributions of source code must retain the
 above copyright
 notice, this list of conditions and the following disclaimer.
 \yskip\item{$\bullet$}Redistributions in binary form must reproduce the above
 copyright notice, this list of conditions and the following disclaimer
 in the documentation and/or other materials provided with the
 distribution.
-\yskip\item{$\bullet$}The name of author may not be used to endorse 
+\yskip\item{$\bullet$}The name of author may not be used to endorse
 or promote products derived from
 this software without specific prior written permission.
 
@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @** Introduction.
 In a great operating system \.{Plan 9} there is a \.{plumber} - a filesystem for interprocess messaging.
-The \.{goplumb} package is implemented to manipulate such messages. The main target of the package is support of 
+The \.{goplumb} package is implemented to manipulate such messages. The main target of the package is support of
 \.{plumber} from \.{Plan 9 from User Space} project http:// swtch.com/plan9port/.
 
 @ Legal information.
@@ -160,7 +160,7 @@ func compare(m1 *Message, m2 *Message) bool {
 		if m2.Attr[n]!=v {
 			return false
 		}
-	}	
+	}
 	return bytes.Compare(m1.Data, m2.Data)==0
 }
 
@@ -197,7 +197,7 @@ All fields of the |Plumb| are unexported.
 @ @<Types@>=
 Plumb struct {
 	f	*client.Fid
-	@<Other members of |Plumb|@>	
+	@<Other members of |Plumb|@>
 }
 
 @* Open. At first if |port| is not an absolute filename, a slash is added if neccessary at the end of |port|. Then a file is opened with specified |omode|.
@@ -243,13 +243,13 @@ func TestOpen(t *testing.T){
 	var err error
 	if sp,err=Open("send", plan9.OWRITE); err!=nil {
 		t.Fatal(err)
-	} 
+	}
 	if rp,err=Open("goplumb", plan9.OREAD); err!=nil {
 		t.Fatal(err)
-	} 
+	}
 }
 
-@* Send. A |message| is packed and is written to the file. 
+@* Send. A |message| is packed and is written to the file.
 @c
 // |Send| sends a |message| and returns |error| if any.
 func (this *Plumb) Send(message *Message) error {
@@ -258,12 +258,12 @@ func (this *Plumb) Send(message *Message) error {
 	}
 	b:=Pack(message)
 	// a workaround: \.{plumber} can't receive a message with length more that |8192-plan9.IOHDRSIZE|
-	@^workaround for \.{plumber}@>	
+	@^workaround for \.{plumber}@>
 	for len(b)>0 {
 		c:=8192-plan9.IOHDRSIZE
 		if len(b)<c {
 			c=len(b)
-		}	
+		}
 		c,err:=this.f.Write(b[:c])
 		if err!=nil {
 			return err
@@ -291,8 +291,8 @@ func Pack(message* Message) []byte {
 	return append(b, message.Data...)
 }
 
-@* PackAttr. Attributes |attr| are packed like pairs |Name=Value| delimeted by spaces. 
-|Value| can be quoted if it is neccessary. 
+@* PackAttr. Attributes |attr| are packed like pairs |Name=Value| delimeted by spaces.
+|Value| can be quoted if it is neccessary.
 @<Imports@>=
 "strings"
 
@@ -332,7 +332,7 @@ func (this *Plumb) SendText(src string, dst string, wdir string, data string) er
 }
 
 @* Recv. At most |8192| bytes are read for the first time. Then |UnpackPartial| is used to unpack a message.
-If the message too big |b| is reallocated for needed size, last part of the message is read and the message 
+If the message too big |b| is reallocated for needed size, last part of the message is read and the message
 is unpacked.
 
 @<Imports@>=
@@ -441,8 +441,8 @@ func UnpackPartial(b []byte) (m *Message, r int) {
 		return nil, 0
 	}
 	m=&Message{
-		Src: string(bb[0]), 
-		Dst: string(bb[1]), 
+		Src: string(bb[0]),
+		Dst: string(bb[1]),
 		Wdir: string(bb[2]),
 		Type: string(bb[3]),
 		Attr: UnpackAttr(string(bb[4]))}
@@ -504,7 +504,7 @@ func UnpackAttr(s string) Attrs {
 			n+=s[i:i+1]
 		}
 		i++
-		if i==len(s) { 
+		if i==len(s) {
 			break
 		}
 		if s[i]=='\'' {
@@ -521,14 +521,14 @@ func UnpackAttr(s string) Attrs {
 				}
 				v+=s[i:i+1]
 			}
-			i++	
+			i++
 		} else {
 			for ; i<len(s) && s[i]!=' '; i++ {
 				v+=s[i:i+1]
 			}
-			
+
 		}
-		i++	
+		i++
 		attrs[n]=v
 	}
 	return attrs
@@ -551,7 +551,7 @@ func (this *Plumb) Close() {
 ch	chan *Message
 
 @
-@c 
+@c
 // |MessageChannel| returns a channel of |*Message| with a buffer |size|
 // from which messages can be read or |error|.
 // First call of |MessageChannel| starts a goroutine to read messages put them to the channel.
@@ -597,10 +597,10 @@ func TestMessageChannel(t *testing.T){
 	time.Sleep(time.Second)
 	rm,ok:=<-ch
 	if !ok {
-		t.Fatal(errors.New("messages channel is closed"))	
+		t.Fatal(errors.New("messages channel is closed"))
 	}
 	t.Logf("message %#v has been received\n", *rm)
-	
+
 	if !compare(rm,&m) {
 		t.Fatal(errors.New("messages is not matched"))
 	}
