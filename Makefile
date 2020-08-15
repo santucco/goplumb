@@ -1,7 +1,6 @@
-# This file is part of goplumb package version 0.4
-# Author Alexander Sychev
+# This file is part of goplumb
 #
-# Copyright (c) 2013 Alexander Sychev. All rights reserved.
+# Copyright (c) 2013, 2020 Alexander Sychev. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,37 +27,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+target=goplumb
+
 IFILES= \
-	goplumb.idx goplumb.log goplumb.toc goplumb.tex goplumb.scn
+	$(target).idx $(target).log $(target).toc $(target).tex $(target).scn
 
 .INTERMEDIATE: $(IFILES)
 
 TEXP?=xetex
 gcflags=-gcflags '-N -l'
 
-all: goplumb doc test
+all: $(target) test
 
-goplumb: goplumb.go
+$(target): $(target).go
 	go build $(gcflags)
+	@echo done
 
-doc: goplumb.pdf
+doc: $(target).pdf
 
 %.go: %.w
 	gotangle $< - $@
 
-%.pdf %.idx %.toc %.log: %.tex
+%.pdf %.idx %.toc %.log: %.tex header.tex
 	$(TEXP) $<
 
 %.tex %.scn: %.w
-	goweave $<   
+	goweave  $<
 
-test: goplumb.w
+test: $(target).w
 	go test
 
-install: goplumb
+install: $(target)
 	go install
 
 clean:
-	rm -rf *.go *.pdf goplumb  $(IFILES)
-
-
+	rm -rf *.go *.pdf $(target)  $(IFILES)

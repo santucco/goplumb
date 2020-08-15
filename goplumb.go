@@ -3,9 +3,14 @@
 /*2:*/
 
 
-//line goplumb.w:51
+//line goplumb.w:9
 
-// Copyright (c) 2013 Alexander Sychev. All rights reserved.
+
+//line license:1
+
+// This file is part of ahist
+//
+// Copyright (c) 2013, 2020 Alexander Sychev. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -31,17 +36,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-
-/*:2*/
-
-
-
-/*3:*/
-
-
-//line goplumb.w:80
+//line goplumb.w:12
 
 // Package goplumb provides interface to plumber - interprocess messaging from Plan 9.
 package goplumb
@@ -49,10 +44,10 @@ package goplumb
 import(
 
 
-/*7:*/
+/*6:*/
 
 
-//line goplumb.w:192
+//line goplumb.w:124
 
 "9fans.net/go/plan9"
 "9fans.net/go/plan9/client"
@@ -60,87 +55,87 @@ import(
 
 
 
-/*:7*/
+/*:6*/
 
 
 
-/*11:*/
+/*10:*/
 
 
-//line goplumb.w:213
+//line goplumb.w:145
 
 "sync"
 
 
 
-/*:11*/
+/*:10*/
 
 
 
-/*16:*/
+/*15:*/
 
 
-//line goplumb.w:278
+//line goplumb.w:210
 
 "fmt"
 
 
 
-/*:16*/
+/*:15*/
 
 
 
-/*18:*/
+/*17:*/
 
 
-//line goplumb.w:296
+//line goplumb.w:228
 
 "strings"
 
 
 
-/*:18*/
+/*:17*/
 
 
 
-/*21:*/
+/*20:*/
 
 
-//line goplumb.w:338
+//line goplumb.w:270
 
 "errors"
 "io"
 
 
 
-/*:21*/
+/*:20*/
 
 
 
-/*26:*/
+/*25:*/
 
 
-//line goplumb.w:420
+//line goplumb.w:352
 
 "bytes"
 "strconv"
 
 
 
-/*:26*/
+/*:25*/
 
 
-//line goplumb.w:85
+//line goplumb.w:17
 
 )
 
 type(
 
 
-/*5:*/
+/*4:*/
 
 
-//line goplumb.w:172
+//line goplumb.w:104
 
 // Message desribes a plumber message.
 Message struct{
@@ -154,14 +149,14 @@ Data[]byte
 
 
 
-/*:5*/
+/*:4*/
 
 
 
-/*6:*/
+/*5:*/
 
 
-//line goplumb.w:184
+//line goplumb.w:116
 
 // Attrs is a map of an attribute of a plumber message.
 Attrs map[string]string
@@ -169,51 +164,51 @@ Attrs map[string]string
 
 
 
-/*:6*/
+/*:5*/
 
 
 
-/*8:*/
+/*7:*/
 
 
-//line goplumb.w:197
+//line goplumb.w:129
 
 Plumb struct{
 f*client.Fid
 
 
-/*31:*/
+/*30:*/
 
 
-//line goplumb.w:550
+//line goplumb.w:482
 
 ch chan*Message
 
 
 
-/*:31*/
+/*:30*/
 
 
-//line goplumb.w:200
+//line goplumb.w:132
 
 }
 
 
 
-/*:8*/
+/*:7*/
 
 
-//line goplumb.w:89
+//line goplumb.w:21
 
 )
 
 var(
 
 
-/*10:*/
+/*9:*/
 
 
-//line goplumb.w:207
+//line goplumb.w:139
 
 fsys*client.Fsys
 sp*Plumb
@@ -221,32 +216,32 @@ rp*Plumb
 
 
 
-/*:10*/
+/*:9*/
 
 
-//line goplumb.w:93
+//line goplumb.w:25
 
 )
 
 
 
-/*:3*/
+/*:2*/
 
-
-
-/*13:*/
-
-
-//line goplumb.w:226
-
-// Open opens a specified port with a specified omode and returns *Plumb or error
-func Open(port string,omode uint8)(*Plumb,error){
 
 
 /*12:*/
 
 
-//line goplumb.w:217
+//line goplumb.w:158
+
+// Open opens a specified port with a specified omode and returns *Plumb or error
+func Open(port string,omode uint8)(*Plumb,error){
+
+
+/*11:*/
+
+
+//line goplumb.w:149
 
 {
 var err error
@@ -257,10 +252,10 @@ return nil,err
 }
 
 
-/*:12*/
+/*:11*/
 
 
-//line goplumb.w:229
+//line goplumb.w:161
 
 var p Plumb
 var err error
@@ -272,14 +267,14 @@ return&p,nil
 
 
 
-/*:13*/
+/*:12*/
 
 
 
-/*15:*/
+/*14:*/
 
 
-//line goplumb.w:253
+//line goplumb.w:185
 
 // Send sends a message and returns error if any.
 func(this*Plumb)Send(message*Message)error{
@@ -305,14 +300,14 @@ return nil
 
 
 
-/*:15*/
+/*:14*/
 
 
 
-/*17:*/
+/*16:*/
 
 
-//line goplumb.w:282
+//line goplumb.w:214
 
 // Pack packs a message to []byte.
 func Pack(message*Message)[]byte{
@@ -327,14 +322,14 @@ return append(b,message.Data...)
 
 
 
-/*:17*/
+/*:16*/
 
 
 
-/*19:*/
+/*18:*/
 
 
-//line goplumb.w:300
+//line goplumb.w:232
 
 // PackAttr packs attr to string. If an attribute value contains a white space,
 // a quote or an equal sign the value will be quoted.
@@ -357,14 +352,14 @@ return s
 
 
 
-/*:19*/
+/*:18*/
 
 
 
-/*20:*/
+/*19:*/
 
 
-//line goplumb.w:321
+//line goplumb.w:253
 
 // SendText sends a text-only message; it assumes Type is text and Attr is empty.
 // SendText returns error if any.
@@ -380,14 +375,14 @@ return this.Send(m)
 
 
 
-/*:20*/
+/*:19*/
 
 
 
-/*22:*/
+/*21:*/
 
 
-//line goplumb.w:343
+//line goplumb.w:275
 
 // Recv returns a pointer to a received message *Message or error.
 func(this*Plumb)Recv()(*Message,error){
@@ -426,14 +421,14 @@ return nil,errors.New("buffer too small")
 
 
 
-/*:22*/
+/*:21*/
 
 
 
-/*25:*/
+/*24:*/
 
 
-//line goplumb.w:411
+//line goplumb.w:343
 
 // Unpack return a pointer to an unpacked message *Message.
 func Unpack(b[]byte)*Message{
@@ -443,14 +438,14 @@ return m
 
 
 
-/*:25*/
+/*:24*/
 
 
 
-/*27:*/
+/*26:*/
 
 
-//line goplumb.w:425
+//line goplumb.w:357
 
 // UnpackPartial helps to unpack messages splited in peaces.
 // The first call to UnpackPartial for a given message must be sufficient to unpack
@@ -493,14 +488,14 @@ return m,0
 
 
 
-/*:27*/
+/*:26*/
 
 
 
-/*29:*/
+/*28:*/
 
 
-//line goplumb.w:497
+//line goplumb.w:429
 
 // UnpackAttr unpack the attributes from s to Attrs
 func UnpackAttr(s string)Attrs{
@@ -543,14 +538,14 @@ return attrs
 
 
 
-/*:29*/
+/*:28*/
 
 
 
-/*30:*/
+/*29:*/
 
 
-//line goplumb.w:538
+//line goplumb.w:470
 
 // Close closes the plumbing connection.
 func(this*Plumb)Close(){
@@ -564,14 +559,14 @@ this.f= nil
 
 
 
-/*:30*/
+/*:29*/
 
 
 
-/*32:*/
+/*31:*/
 
 
-//line goplumb.w:554
+//line goplumb.w:486
 
 // MessageChannel returns a channel of *Message with a buffer size
 // from which messages can be read or error.
@@ -596,6 +591,6 @@ return this.ch,nil
 
 
 
-/*:32*/
+/*:31*/
 
 

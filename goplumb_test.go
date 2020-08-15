@@ -1,9 +1,9 @@
 
 
-/*4:*/
+/*3:*/
 
 
-//line goplumb.w:98
+//line goplumb.w:30
 
 package goplumb
 
@@ -16,19 +16,19 @@ import(
 "9fans.net/go/plan9/client"
 
 
-/*23:*/
+/*22:*/
 
 
-//line goplumb.w:381
+//line goplumb.w:313
 
 "errors"
 
 
 
-/*:23*/
+/*:22*/
 
 
-//line goplumb.w:108
+//line goplumb.w:40
 
 )
 
@@ -90,10 +90,10 @@ return bytes.Compare(m1.Data,m2.Data)==0
 
 
 
-/*14:*/
+/*13:*/
 
 
-//line goplumb.w:240
+//line goplumb.w:172
 
 func TestOpen(t*testing.T){
 prepare(t)
@@ -108,14 +108,14 @@ t.Fatal(err)
 
 
 
-/*:14*/
+/*:13*/
 
 
 
-/*24:*/
+/*23:*/
 
 
-//line goplumb.w:384
+//line goplumb.w:316
 
 func TestSendRecv(t*testing.T){
 var m Message
@@ -144,14 +144,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:24*/
+/*:23*/
 
 
 
-/*28:*/
+/*27:*/
 
 
-//line goplumb.w:467
+//line goplumb.w:399
 
 func TestSendRecvBigMessage(t*testing.T){
 var m Message
@@ -183,14 +183,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:28*/
+/*:27*/
 
 
 
-/*33:*/
+/*32:*/
 
 
-//line goplumb.w:577
+//line goplumb.w:509
 
 func TestMessageChannel(t*testing.T){
 var m Message
@@ -225,14 +225,14 @@ t.Fatal(errors.New("messages is not matched"))
 
 
 
-/*:33*/
+/*:32*/
 
 
 
-/*34:*/
+/*33:*/
 
 
-//line goplumb.w:610
+//line goplumb.w:542
 
 func TestClose(t*testing.T){
 rp.Close()
@@ -241,15 +241,15 @@ sp.Close()
 
 
 
-/*:34*/
+/*:33*/
 
 
-//line goplumb.w:167
+//line goplumb.w:99
 
 
 
 
 
-/*:4*/
+/*:3*/
 
 

@@ -1,83 +1,15 @@
-% This file is part of goplumb package version 0.4
-% Author Alexander Sychev
-
-\def\title{goplumb (version 0.4)}
-\def\topofcontents{\null\vfill
-	\centerline{\titlefont The {\ttitlefont goplumb} package for manipulating {\ttitlefont plumb} messages}
-	\vskip 15pt
-	\centerline{(version 0.4)}
-	\vfill}
-\def\botofcontents{\vfill
-\noindent
-Copyright \copyright\ 2013 Alexander Sychev. All rights reserved.
-\bigskip\noindent
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-\yskip\item{$\bullet$}Redistributions of source code must retain the
-above copyright
-notice, this list of conditions and the following disclaimer.
-\yskip\item{$\bullet$}Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-\yskip\item{$\bullet$}The name of author may not be used to endorse
-or promote products derived from
-this software without specific prior written permission.
-
-\bigskip\noindent
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-}
-
-\pageno=\contentspagenumber \advance\pageno by 1
-\let\maybe=\iftrue
+\input header
 
 @** Introduction.
 In a great operating system \.{Plan 9} there is a \.{plumber} - a filesystem for interprocess messaging.
 The \.{goplumb} package is implemented to manipulate such messages. The main target of the package is support of
 \.{plumber} from \.{Plan 9 from User Space} project http:// swtch.com/plan9port/.
 
-@ Legal information.
-@c
-// Copyright (c) 2013 Alexander Sychev. All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//    * Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//    * Redistributions in binary form must reproduce the above
-// copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with the
-// distribution.
-//    * The name of author may not be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 @** Implementation.
 @c
+
+@i license
+
 // Package goplumb provides interface to plumber - interprocess messaging from Plan 9.
 package goplumb
 
